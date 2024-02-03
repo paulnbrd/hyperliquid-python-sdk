@@ -105,13 +105,12 @@ class Exchange(API):
             order["cloid"] = cloid
         return self.bulk_orders([order])
 
-    def bulk_orders(self, order_requests: List[OrderRequest]) -> Any:
+    def bulk_orders(self, order_requests: List[OrderRequest], grouping: str = "na") -> Any:
         order_specs: List[OrderSpec] = [
             order_request_to_order_spec(order, self.coin_to_asset[order["coin"]]) for order in order_requests
         ]
 
         timestamp = get_timestamp_ms()
-        grouping: Literal["na"] = "na"
 
         has_cloid = False
         for order_spec in order_specs:
