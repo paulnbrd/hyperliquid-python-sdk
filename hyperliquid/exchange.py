@@ -55,7 +55,8 @@ class Exchange(API):
             self.meta = self.info.meta()
         else:
             self.meta = meta
-        self.coin_to_asset = {asset_info["name"]: asset for (asset, asset_info) in enumerate(self.meta["universe"])}
+        self.coin_to_asset = {asset_info["name"]: asset for (
+            asset, asset_info) in enumerate(self.meta["universe"])}
 
     def _post_action(self, action, signature, nonce):
         payload = {
@@ -120,17 +121,21 @@ class Exchange(API):
         if has_cloid:
             for order_spec in order_specs:
                 if "cloid" not in order_spec["order"] or not order_spec["order"]["cloid"]:
-                    raise ValueError("all orders must have cloids if at least one has a cloid")
+                    raise ValueError(
+                        "all orders must have cloids if at least one has a cloid")
 
         if has_cloid:
-            signature_types = ["(uint32,bool,uint64,uint64,bool,uint8,uint64,bytes16)[]", "uint8"]
+            signature_types = [
+                "(uint32,bool,uint64,uint64,bool,uint8,uint64,bytes16)[]", "uint8"]
         else:
-            signature_types = ["(uint32,bool,uint64,uint64,bool,uint8,uint64)[]", "uint8"]
+            signature_types = [
+                "(uint32,bool,uint64,uint64,bool,uint8,uint64)[]", "uint8"]
 
         signature = sign_l1_action(
             self.wallet,
             signature_types,
-            [[order_spec_preprocessing(order_spec) for order_spec in order_specs], order_grouping_to_number(grouping)],
+            [[order_spec_preprocessing(
+                order_spec) for order_spec in order_specs], order_grouping_to_number(grouping)],
             ZERO_ADDRESS if self.vault_address is None else self.vault_address,
             timestamp,
             self.base_url == MAINNET_API_URL,
@@ -184,12 +189,14 @@ class Exchange(API):
 
         timestamp = get_timestamp_ms()
 
-        signature_types = ["(uint64,uint32,bool,uint64,uint64,bool,uint8,uint64,bytes16)[]"]
+        signature_types = [
+            "(uint64,uint32,bool,uint64,uint64,bool,uint8,uint64,bytes16)[]"]
 
         signature = sign_l1_action(
             self.wallet,
             signature_types,
-            [[modify_spec_preprocessing(modify_spec) for modify_spec in modify_specs]],
+            [[modify_spec_preprocessing(modify_spec)
+              for modify_spec in modify_specs]],
             ZERO_ADDRESS if self.vault_address is None else self.vault_address,
             timestamp,
             self.base_url == MAINNET_API_URL,
@@ -227,8 +234,10 @@ class Exchange(API):
         px: Optional[float] = None,
         slippage: float = DEFAULT_SLIPPAGE,
         cloid: Optional[Cloid] = None,
+        address: str = None,
     ) -> Any:
-        positions = self.info.user_state(self.wallet.address)["assetPositions"]
+        positions = self.info.user_state(
+            self.wallet.address if address is None else address)["assetPositions"]
         for position in positions:
             item = position["position"]
             if coin != item["coin"]:
@@ -237,6 +246,7 @@ class Exchange(API):
             if not sz:
                 sz = szi
             is_buy = True if szi < 0 else False
+            sz = abs(sz)
             # Get aggressive Market Price
             px = self._slippage_price(coin, is_buy, slippage, px)
             # Market Order is an aggressive Limit Order IoC
@@ -253,7 +263,8 @@ class Exchange(API):
         signature = sign_l1_action(
             self.wallet,
             ["(uint32,uint64)[]"],
-            [[(self.coin_to_asset[cancel["coin"]], cancel["oid"]) for cancel in cancel_requests]],
+            [[(self.coin_to_asset[cancel["coin"]], cancel["oid"])
+              for cancel in cancel_requests]],
             ZERO_ADDRESS if self.vault_address is None else self.vault_address,
             timestamp,
             self.base_url == MAINNET_API_URL,
@@ -280,7 +291,8 @@ class Exchange(API):
             ["(uint32,bytes16)[]"],
             [
                 [
-                    (self.coin_to_asset[cancel["coin"]], str_to_bytes16(cancel["cloid"].to_raw()))
+                    (self.coin_to_asset[cancel["coin"]],
+                     str_to_bytes16(cancel["cloid"].to_raw()))
                     for cancel in cancel_requests
                 ]
             ],
@@ -375,7 +387,8 @@ class Exchange(API):
             "time": timestamp,
         }
         is_mainnet = self.base_url == MAINNET_API_URL
-        signature = sign_withdraw_from_bridge_action(self.wallet, payload, is_mainnet)
+        signature = sign_withdraw_from_bridge_action(
+            self.wallet, payload, is_mainnet)
         return self._post_action(
             {
                 "chain": "Arbitrum" if is_mainnet else "ArbitrumTestnet",
@@ -390,7 +403,8 @@ class Exchange(API):
         agent_key = "0x" + secrets.token_hex(32)
         account = eth_account.Account.from_key(agent_key)
         if name is not None:
-            connection_id = keccak(encode(["address", "string"], [account.address, name]))
+            connection_id = keccak(
+                encode(["address", "string"], [account.address, name]))
         else:
             connection_id = keccak(encode(["address"], [account.address]))
         agent = {
